@@ -28,7 +28,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Constants
 DOC_PATH = "/Users/bkwok/Downloads/Benedict-Resume-2025.docx.pdf"
-MODEL_NAME = "llama3.2"
+MODEL_NAME = "qwen2:7b"
 EMBEDDING_MODEL = "nomic-embed-text"
 VECTOR_STORE_NAME = "simple-rag"
 PERSIST_DIRECTORY = "./chroma_db"
@@ -112,7 +112,12 @@ Original question: {question}""",
 def create_chain(retriever, llm):
     """Create the chain with preserved syntax."""
     # RAG prompt
-    template = """You are a HR professional resume reviwer, your role is to analyze the candidate resume by answering the question based ONLY on the following context, provide your assessment of the resume comparing to the job description as user input. Provide me a score as a response how the resume and job description matches from 0 to 10, where 0 indicates the resume is totoally not meet the job description and 10 indicates that they are perfectly match.  Recommend the top 3 missing skills from the resume which can improve the score:
+    template = """You are a Human Resource resume reviwer, your role is to analyze the candidate resume 
+by answering the question based ONLY on the following context, Provide me a score as a response of 
+how the resume matches the job description matches from 0 to 10, where 0 indicates the resume 
+totoally does not meet the job description and 10 indicates that they are perfectly match.
+Highligit the 3 areas of strength and gaps of the resume compares to the job requirement
+Recommend the top 3 missing skills from the resume which can improve the score:
 {context}
 Question: {question}
 """
@@ -134,7 +139,7 @@ def main():
     st.title("My Resume Assistant")
 
     # User input
-    user_input = st.text_input("Copy and paste the job description:", "")
+    user_input = st.text_area("Copy and paste the job description:", height=200)
     sanitized_prompt, results_valid, results_score = scan_prompt(input_scanners, user_input)
     if any(not result for result in results_valid.values()):
         print(f"Prompt {user_input} is not valid, scores: {results_score}")
