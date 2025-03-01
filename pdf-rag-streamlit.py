@@ -1,5 +1,3 @@
-# app.py
-
 import streamlit as st
 import os
 import logging
@@ -19,7 +17,8 @@ from llm_guard.output_scanners import Deanonymize, NoRefusal, Relevance, Sensiti
 from llm_guard.vault import Vault
 
 vault = Vault()
-input_scanners = [Anonymize(vault), Toxicity(), TokenLimit(), PromptInjection()]
+#input_scanners = [Anonymize(vault), Toxicity(), TokenLimit(), PromptInjection()]
+input_scanners = [Toxicity(), TokenLimit(), PromptInjection()]
 output_scanners = [Deanonymize(vault), NoRefusal(), Relevance(), Sensitive()]
 
 
@@ -28,10 +27,10 @@ logging.basicConfig(level=logging.INFO)
 
 # Constants
 DOC_PATH = "/Users/bkwok/Downloads/Benedict-Resume-2025.docx.pdf"
-#MODEL_NAME = "qwen2:7b"
-MODEL_NAME = "llama3.2"
+#MODEL_NAME = "llama3.2"
+MODEL_NAME = "qwen2:7b"
 EMBEDDING_MODEL = "nomic-embed-text"
-VECTOR_STORE_NAME = "simple-rag"
+VECTOR_STORE_NAME = "resume-rag"
 PERSIST_DIRECTORY = "./chroma_db"
 
 
@@ -95,7 +94,7 @@ def create_retriever(vector_db, llm):
     """Create a multi-query retriever."""
     QUERY_PROMPT = PromptTemplate(
         input_variables=["question"],
-        template="""You are an AI language model assistant. Your task is to generate five
+        template="""You are an AI language model assistant. Your task is to generate three
 different versions of the given user question to retrieve relevant documents from
 a vector database. By generating multiple perspectives on the user question, your
 goal is to help the user overcome some of the limitations of the distance-based
@@ -113,14 +112,15 @@ Original question: {question}""",
 def create_chain(retriever, llm):
     """Create the chain with preserved syntax."""
     # RAG prompt
-    template = """You are a Human Resource resume reviwer, your role is to analyze the candidate resume 
-by answering the question based ONLY on the following context, Provide me a score as a response of 
-how the resume matches the job description matches from 0 to 10, where 0 indicates the resume 
-totoally does not meet the job description and 10 indicates that they are perfectly match.
-Highligit the 3 areas of strength and gaps of the resume compares to the job requirement
-Recommend the top 3 missing skills from the resume which can improve the score:
+    template = """you are a HR professional resume reviewer, your role is to analyze the candidate's resume by answering the question
+based ONLY on the following context, your goal is to provide your assessment of the resume compared to the job description from user input. 
 {context}
-Question: {question}
+Assessment: Provide me with your assessment in the following orders:
+1) Retrive the name of the company name from job description.  
+2) Based on the resume, predict if resume owner fits into the company culture according to the job description
+3) Provide me a score as a response how the resume and job description matches from 0 to 10, where 0 indicates the resume is totally not meet the job description
+and 10 indicates that they are perfectly matched.  
+4) Recommend the top 3 missing skills from the resume which can improve the score:{question}
 """
 
     prompt = ChatPromptTemplate.from_template(template)
@@ -140,7 +140,7 @@ def main():
     st.title("My Resume Assistant")
 
     # User input
-    user_input = st.text_area("Copy and paste the job description:", height=400)
+    user_input = st.text_area("Copy and paste the job description:", "")
     sanitized_prompt, results_valid, results_score = scan_prompt(input_scanners, user_input)
     if any(not result for result in results_valid.values()):
         print(f"Prompt {user_input} is not valid, scores: {results_score}")
