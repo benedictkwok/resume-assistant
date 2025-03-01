@@ -28,7 +28,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Constants
 DOC_PATH = "/Users/bkwok/Downloads/Benedict-Resume-2025.docx.pdf"
-MODEL_NAME = "qwen2:7b"
+#MODEL_NAME = "qwen2:7b"
+MODEL_NAME = "llama3.2"
 EMBEDDING_MODEL = "nomic-embed-text"
 VECTOR_STORE_NAME = "simple-rag"
 PERSIST_DIRECTORY = "./chroma_db"
@@ -139,7 +140,7 @@ def main():
     st.title("My Resume Assistant")
 
     # User input
-    user_input = st.text_area("Copy and paste the job description:", height=200)
+    user_input = st.text_area("Copy and paste the job description:", height=400)
     sanitized_prompt, results_valid, results_score = scan_prompt(input_scanners, user_input)
     if any(not result for result in results_valid.values()):
         print(f"Prompt {user_input} is not valid, scores: {results_score}")
